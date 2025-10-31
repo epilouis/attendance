@@ -619,7 +619,7 @@
             setTimeout(generateQR, 100);
         }
         
-        // Download QR Code - FIXED VERSION
+// Download QR Code - FIXED VERSION
         downloadQRBtn.addEventListener('click', function() {
             if (!currentQR) {
                 alert('Please generate a QR code first!');
@@ -632,24 +632,11 @@
 
             const canvas = qrCodeDiv.querySelector('canvas');
             if (canvas) {
-                // Create a higher resolution download without scaling issues
-                const downloadCanvas = document.createElement('canvas');
-                const scale = 2; // Scale factor for higher resolution
-                downloadCanvas.width = canvas.width * scale;
-                downloadCanvas.height = canvas.height * scale;
-                
-                const ctx = downloadCanvas.getContext('2d');
-                
-                // Use nearest neighbor scaling to preserve sharp edges
-                ctx.imageSmoothingEnabled = false;
-                
-                // Draw the original canvas content to the download canvas
-                ctx.drawImage(canvas, 0, 0, downloadCanvas.width, downloadCanvas.height);
-                
-                // Create download link
+                // Download the canvas directly without any scaling
+                // This preserves the exact QR code quality
                 const link = document.createElement('a');
                 link.download = `${fileName}.png`;
-                link.href = downloadCanvas.toDataURL('image/png');
+                link.href = canvas.toDataURL('image/png');
                 link.click();
                 
                 // Show success message
@@ -898,3 +885,4 @@
     </script>
 </body>
 </html>
+
