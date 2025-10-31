@@ -629,13 +629,13 @@
             const studentSection = document.getElementById('studentSection').value.trim();
             const fileName = `${studentName}_${studentSection}_qr`.replace(/\s+/g, '_');
 
-            // Recreate the student data
+            // Recreate the student data - using same format
             const studentData = {
                 name: studentName,
                 section: studentSection,
                 timestamp: new Date().toISOString()
             };
-            const jsonString = JSON.stringify(studentData);
+            const qrData = `NAME:${studentName}|SECTION:${studentSection}|TIME:${new Date().toISOString()}`;
 
             // Create a temporary div to generate a fresh QR code
             const tempDiv = document.createElement('div');
@@ -644,12 +644,12 @@
             
             // Generate a fresh QR code specifically for download
             const downloadQR = new QRCode(tempDiv, {
-                text: jsonString,
+                text: qrData,
                 width: qrSize,
                 height: qrSize,
                 colorDark: "#000000",
                 colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H,
+                correctLevel: QRCode.CorrectLevel.M,
                 useSVG: false
             });
             
@@ -686,7 +686,6 @@
                 document.body.removeChild(tempDiv);
             }, 100);
         });
-        
         // Start QR Scanner
         startScannerBtn.addEventListener('click', async function() {
             try {
@@ -926,6 +925,7 @@
     </script>
 </body>
 </html>
+
 
 
 
