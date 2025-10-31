@@ -131,10 +131,6 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
-        button i {
-            margin-right: 8px;
-        }
-
         .qr-container {
             text-align: center;
             margin: 25px 0;
@@ -399,6 +395,22 @@
         .clear-btn:hover {
             background-color: #5a6268;
         }
+        
+        .download-btn {
+            background-color: #28a745;
+        }
+        
+        .download-btn:hover {
+            background-color: #218838;
+        }
+        
+        .test-btn {
+            background-color: #17a2b8;
+        }
+        
+        .test-btn:hover {
+            background-color: #138496;
+        }
     </style>
 </head>
 <body>
@@ -425,21 +437,21 @@
                     <label>QR Code Quality</label>
                     <div class="qr-quality-options">
                         <label>
-                            <input type="radio" name="qrQuality" value="200" checked> Standard (200×200)
+                            <input type="radio" name="qrQuality" value="300" checked> Standard (300×300)
                         </label>
                         <label>
-                            <input type="radio" name="qrQuality" value="300"> High (300×300)
+                            <input type="radio" name="qrQuality" value="400"> High (400×400)
                         </label>
                         <label>
-                            <input type="radio" name="qrQuality" value="400"> Ultra (400×400)
+                            <input type="radio" name="qrQuality" value="500"> Ultra (500×500)
                         </label>
                     </div>
-                    <div class="qr-size-display" id="qrSizeDisplay">Size: 200×200 pixels</div>
+                    <div class="qr-size-display" id="qrSizeDisplay">Size: 300×300 pixels</div>
                 </div>
                 
                 <div class="button-group">
-                    <button id="generateQR">Generate QR Code</button>
-                    <button id="testQR" style="background: #28a745;">Test with Sample Data</button>
+                    <button id="generateQR" class="download-btn">Generate QR Code</button>
+                    <button id="testQR" class="test-btn">Test with Sample Data</button>
                 </div>
                 
                 <div class="qr-container" id="qrContainer">
@@ -539,7 +551,7 @@
         
         // QR Quality Settings
         const qrQualityRadios = document.querySelectorAll('input[name="qrQuality"]');
-        let qrSize = 200;
+        let qrSize = 300; // Increased default size
         
         // Update QR size display
         qrQualityRadios.forEach(radio => {
@@ -607,7 +619,7 @@
             setTimeout(generateQR, 100);
         }
         
-        // Download QR Code
+        // Download QR Code - FIXED VERSION
         downloadQRBtn.addEventListener('click', function() {
             if (!currentQR) {
                 alert('Please generate a QR code first!');
@@ -620,20 +632,30 @@
 
             const canvas = qrCodeDiv.querySelector('canvas');
             if (canvas) {
-                // Create a higher resolution download
+                // Create a higher resolution download without scaling issues
                 const downloadCanvas = document.createElement('canvas');
                 const scale = 2; // Scale factor for higher resolution
                 downloadCanvas.width = canvas.width * scale;
                 downloadCanvas.height = canvas.height * scale;
                 
                 const ctx = downloadCanvas.getContext('2d');
+                
+                // Use nearest neighbor scaling to preserve sharp edges
                 ctx.imageSmoothingEnabled = false;
+                
+                // Draw the original canvas content to the download canvas
                 ctx.drawImage(canvas, 0, 0, downloadCanvas.width, downloadCanvas.height);
                 
+                // Create download link
                 const link = document.createElement('a');
                 link.download = `${fileName}.png`;
                 link.href = downloadCanvas.toDataURL('image/png');
                 link.click();
+                
+                // Show success message
+                scanResult.textContent = `QR code for ${studentName} downloaded successfully!`;
+                scanResult.className = 'message success';
+                scanResult.classList.remove('hidden');
             }
         });
         
