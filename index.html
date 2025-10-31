@@ -548,6 +548,7 @@
         let stream = null;
         let scanning = false;
         let attendanceRecords = [];
+        let currentQRData = null;
         
         // QR Quality Settings
         const qrQualityRadios = document.querySelectorAll('input[name="qrQuality"]');
@@ -587,6 +588,7 @@
             };
 
             const jsonString = JSON.stringify(studentData);
+            currentQRData = jsonString;
             
             // Clear previous QR
             qrCodeDiv.innerHTML = '';
@@ -619,9 +621,9 @@
             setTimeout(generateQR, 100);
         }
 
-        // Download QR Code - FIXED VERSION
+        // Download QR Code - COMPLETELY FIXED VERSION
         downloadQRBtn.addEventListener('click', function() {
-            if (!currentQR) {
+            if (!currentQR || !currentQRData) {
                 alert('Please generate a QR code first!');
                 return;
             }
@@ -630,49 +632,55 @@
             const studentSection = document.getElementById('studentSection').value.trim();
             const fileName = `${studentName}_${studentSection}_qr`.replace(/\s+/g, '_');
 
-            // Get the canvas from the displayed QR code
-            const canvas = qrCodeDiv.querySelector('canvas');
-            if (canvas) {
-                // Create a higher resolution download without scaling issues
-                const downloadCanvas = document.createElement('canvas');
-                const scale = 2; // Scale factor for higher resolution
-                downloadCanvas.width = canvas.width * scale;
-                downloadCanvas.height = canvas.height * scale;
-                
-                const ctx = downloadCanvas.getContext('2d');
-                
-                // Use nearest neighbor scaling to preserve sharp edges
-                ctx.imageSmoothingEnabled = false;
-                ctx.imageSmoothingQuality = 'low';
-                
-                // Draw the original canvas content to the download canvas
-                ctx.drawImage(canvas, 0, 0, downloadCanvas.width, downloadCanvas.height);
-                
-                // Create download link
-                const link = document.createElement('a');
-                link.download = `${fileName}.png`;
-                link.href = downloadCanvas.toDataURL('image/png');
-                link.click();
-                
-                // Show success message
-                scanResult.textContent = `QR code for ${studentName} downloaded successfully!`;
-                scanResult.className = 'message success';
-                scanResult.classList.remove('hidden');
-            } else {
-                // Fallback if canvas is not available
-                const img = qrCodeDiv.querySelector('img');
-                if (img) {
+            // Create a temporary container for generating the download QR
+            const tempContainer = document.createElement('div');
+            tempContainer.style.position = 'absolute';
+            tempContainer.style.left = '-9999px';
+            document.body.appendChild(tempContainer);
+            
+            // Generate a fresh QR code with the exact same data
+            const downloadQR = new QRCode(tempContainer, {
+                text: currentQRData,
+                width: qrSize * 2, // Double the size for better quality
+                height: qrSize * 2,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            // Wait for QR to render
+            setTimeout(() => {
+                const canvas = tempContainer.querySelector('canvas');
+                if (canvas) {
+                    // Create download link
                     const link = document.createElement('a');
                     link.download = `${fileName}.png`;
-                    link.href = img.src;
+                    link.href = canvas.toDataURL('image/png');
                     link.click();
                     
                     // Show success message
                     scanResult.textContent = `QR code for ${studentName} downloaded successfully!`;
                     scanResult.className = 'message success';
                     scanResult.classList.remove('hidden');
+                } else {
+                    // Fallback to image if canvas not available
+                    const img = tempContainer.querySelector('img');
+                    if (img) {
+                        const link = document.createElement('a');
+                        link.download = `${fileName}.png`;
+                        link.href = img.src;
+                        link.click();
+                        
+                        // Show success message
+                        scanResult.textContent = `QR code for ${studentName} downloaded successfully!`;
+                        scanResult.className = 'message success';
+                        scanResult.classList.remove('hidden');
+                    }
                 }
-            }
+                
+                // Clean up
+                document.body.removeChild(tempContainer);
+            }, 100);
         });
         
         // Start QR Scanner
