@@ -618,7 +618,8 @@
             // Generate immediately
             setTimeout(generateQR, 100);
         }
-// Download QR Code - COMPLETELY FIXED VERSION
+
+        // Download QR Code - FIXED VERSION
         downloadQRBtn.addEventListener('click', function() {
             if (!currentQR) {
                 alert('Please generate a QR code first!');
@@ -629,37 +630,38 @@
             const studentSection = document.getElementById('studentSection').value.trim();
             const fileName = `${studentName}_${studentSection}_qr`.replace(/\s+/g, '_');
 
-            // Recreate the student data - using same format
-            const studentData = {
-                name: studentName,
-                section: studentSection,
-                timestamp: new Date().toISOString()
-            };
-            const qrData = `NAME:${studentName}|SECTION:${studentSection}|TIME:${new Date().toISOString()}`;
-
-            // Create a temporary div to generate a fresh QR code
-            const tempDiv = document.createElement('div');
-            tempDiv.style.display = 'none';
-            document.body.appendChild(tempDiv);
-            
-            // Generate a fresh QR code specifically for download
-            const downloadQR = new QRCode(tempDiv, {
-                text: qrData,
-                width: qrSize,
-                height: qrSize,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.M,
-                useSVG: false
-            });
-            
-            // Wait a moment for the QR to generate, then download
-            setTimeout(() => {
-                const img = tempDiv.querySelector('img');
-                const canvas = tempDiv.querySelector('canvas');
+            // Get the canvas from the displayed QR code
+            const canvas = qrCodeDiv.querySelector('canvas');
+            if (canvas) {
+                // Create a higher resolution download without scaling issues
+                const downloadCanvas = document.createElement('canvas');
+                const scale = 2; // Scale factor for higher resolution
+                downloadCanvas.width = canvas.width * scale;
+                downloadCanvas.height = canvas.height * scale;
                 
-                if (img && img.src) {
-                    // Download the image
+                const ctx = downloadCanvas.getContext('2d');
+                
+                // Use nearest neighbor scaling to preserve sharp edges
+                ctx.imageSmoothingEnabled = false;
+                ctx.imageSmoothingQuality = 'low';
+                
+                // Draw the original canvas content to the download canvas
+                ctx.drawImage(canvas, 0, 0, downloadCanvas.width, downloadCanvas.height);
+                
+                // Create download link
+                const link = document.createElement('a');
+                link.download = `${fileName}.png`;
+                link.href = downloadCanvas.toDataURL('image/png');
+                link.click();
+                
+                // Show success message
+                scanResult.textContent = `QR code for ${studentName} downloaded successfully!`;
+                scanResult.className = 'message success';
+                scanResult.classList.remove('hidden');
+            } else {
+                // Fallback if canvas is not available
+                const img = qrCodeDiv.querySelector('img');
+                if (img) {
                     const link = document.createElement('a');
                     link.download = `${fileName}.png`;
                     link.href = img.src;
@@ -669,23 +671,10 @@
                     scanResult.textContent = `QR code for ${studentName} downloaded successfully!`;
                     scanResult.className = 'message success';
                     scanResult.classList.remove('hidden');
-                } else if (canvas) {
-                    // Use canvas as fallback
-                    const link = document.createElement('a');
-                    link.download = `${fileName}.png`;
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-                    
-                    // Show success message
-                    scanResult.textContent = `QR code for ${studentName} downloaded successfully!`;
-                    scanResult.className = 'message success';
-                    scanResult.classList.remove('hidden');
                 }
-                
-                // Clean up temp div
-                document.body.removeChild(tempDiv);
-            }, 100);
+            }
         });
+        
         // Start QR Scanner
         startScannerBtn.addEventListener('click', async function() {
             try {
@@ -925,7 +914,3 @@
     </script>
 </body>
 </html>
-
-
-
-
